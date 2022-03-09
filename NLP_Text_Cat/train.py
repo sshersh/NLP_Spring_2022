@@ -2,12 +2,16 @@ import numpy as np
 from utils import *
 import argparse
 import json
+from os.path import exists
 
 parser = argparse.ArgumentParser(description='Train the Naive Bayes model')
-parser.add_argument("training_file_path")
+parser.add_argument("training_file_path", help = "path to file with paths of\
+    training corpus and labels")
+parser.add_argument("word_data_file", help = "file to store word data from training")
 args = parser.parse_args()
 training_file_path = args.training_file_path
 
+# estimate priors from current training data and add to overall priors data
 d_priors = est_prior(training_file_path)
 
 # dict of word occurences. For each word, counts for occurences of that word
@@ -37,7 +41,7 @@ for line in training_lines:
             d_word_occurs[token] = deepcopy(d_cats_default)
             d_word_occurs[token][true_cat] = 1
         elif token not in stemmed_data[0:idx]:
-            d_word_occurs[token][true_cat] += 1
+            d_word_occurs[token][true_cat] = d_word_occurs[token].get(true_cat, 0) + 1
 
-out_file = open("training_word_data.json", "w")
+out_file = open(args.word_data_file, "w")
 json.dump([d_priors, d_word_occurs], out_file)

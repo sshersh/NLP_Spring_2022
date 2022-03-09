@@ -74,25 +74,3 @@ def get_log_priors(d_priors):
         d_log_priors[cat] = np.log(d_priors[cat] / total_training_docs)
     
     return d_log_priors
-
-def estimate_category(doc_string, d_priors, d_word_occurs):
-    """ Run the trained Bayes model on a document
-
-    doc_string  :   text string
-    d_priors    :   dict of priors
-    d_word_occurs   :   dict of word occurences in each category
-    """
-    tokenized_doc = tokenize(doc_string)
-    filtered_doc = filter(tokenized_doc)
-    stemmed_doc = stem(filtered_doc)
-
-    d_log_priors = get_log_priors(d_priors)
-    d_post = deepcopy(d_log_priors)
-
-    for token in stemmed_doc:
-        if token in d_word_occurs:
-            for cat in d_priors:
-                d_post[cat] += np.log((d_word_occurs[token][cat] + 1) /
-                                    (d_priors[cat] + 1))
-    # return the argmax
-    return max(d_post, key=d_post.get)  
