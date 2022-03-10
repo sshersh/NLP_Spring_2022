@@ -7,6 +7,9 @@ corpus_cats = {"corpus1": ["Str", "Pol", "Dis", "Cri", "Oth"],
             "corpus2": ["I", "O"],
             "corpus3":  ["Wor", "USN", "Sci", "Fin", "Spo", "Ent"]}
 
+# k value for Laplace smoothing, found empirically
+k = 0.25
+
 def estimate_category(doc_string, d_priors, d_word_occurs, cat_options=None):
     """ Run the trained Bayes model on a document
 
@@ -29,8 +32,8 @@ def estimate_category(doc_string, d_priors, d_word_occurs, cat_options=None):
         if token in d_word_occurs:
             for cat in cat_options:
                 if cat in d_word_occurs[token]:
-                    d_post[cat] += np.log((d_word_occurs[token][cat] + 1) /
-                                    (d_priors[cat] + 1))
+                    d_post[cat] += np.log((d_word_occurs[token][cat] + k) /
+                                    (d_priors[cat] + k))
     # return the argmax
     return max(d_post, key=d_post.get)  
 
