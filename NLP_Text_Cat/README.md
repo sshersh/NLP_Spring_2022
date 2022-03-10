@@ -2,8 +2,8 @@
 
 Text categorization of news articles and captions using bag-of-words Naive Bayes
 
-## Required Environment
-- Linux (Developed in WSL 2)
+## Development Environment
+- Linux (WSL 2)
 - Python >= 3.8
 - NLTK >= 3.6
 
