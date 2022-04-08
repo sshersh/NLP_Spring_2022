@@ -1,6 +1,11 @@
 import string
 from utils import *
 from copy import deepcopy
+import argparse
+
+parser = argparse.ArgumentParser(description='Use CKY to parse a sentence')
+parser.add_argument('grammar_file', help = "path to file defining CNF grammar")
+args = parser.parse_args()
 
 def cky(sentence, NT_rules, pos_rules):
     """
@@ -37,9 +42,18 @@ def cky(sentence, NT_rules, pos_rules):
 
     return parse_table, parse_table_deriv
 
-def print_parses_toplevel(sentence, parse_table, parse_table_deriv, node):
-    print_parses(sentence, parse_table, parse_table_deriv, node)
-    print('')
+def print_parses_toplevel(sentence, parse_table, parse_table_deriv):
+    sentence_len = len(sentence.split())
+    valid_parses = 0
+    for ind, NT in enumerate(parse_table[sentence_len - 1][0]):
+        if NT != 'S':
+            continue
+        else:
+            valid_parses += 1
+            print('')
+            print("Valid parse #" + str(valid_parses))
+            print_parses(sentence, parse_table, parse_table_deriv, parse_table_deriv[-1][0][ind])
+            print('')
 
 def print_parses(sentence, parse_table, parse_table_deriv, node):
     """
@@ -57,8 +71,14 @@ def print_parses(sentence, parse_table, parse_table_deriv, node):
         print_parses(sentence, parse_table, parse_table_deriv, node3)
         print(']', end = '')
 
-sentence = 'i book the flight to houston'
-NT_rules, pos_rules = make_grammar('sampleGrammar.cnf')
-parse_table, parse_table_deriv =cky(sentence, NT_rules, pos_rules)
+print("Loading grammar...")
+NT_rules, pos_rules = make_grammar(args.grammar_file)
+sentence = input("Enter a sentence: ")
 
-print_parses_toplevel(sentence, parse_table, parse_table_deriv, parse_table_deriv[-1][0][0])
+parse_table, parse_table_deriv = cky(sentence, NT_rules, pos_rules)
+
+if 'S' in parse_table[len(sentence.split()) - 1][0]:
+    print("VALID SENTENCE")
+    print_parses_toplevel(sentence, parse_table, parse_table_deriv)
+else:
+    print("NO VALID PARSES")
