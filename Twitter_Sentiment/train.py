@@ -2,66 +2,19 @@ import numpy as np
 import pandas as pd
 import warnings
 import matplotlib.pyplot as plt
+from utils import *
 
 # was getting a lot of annoying warnings whenever importing tensorflow
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     import tensorflow as tf
-    from tensorflow.keras.preprocessing.text import Tokenizer
     from tensorflow.keras import Sequential
-    from tensorflow.keras.layers import Embedding, Bidirectional, Dense, LSTM, Softmax
-    from tensorflow.keras.preprocessing.sequence import pad_sequences
+    from tensorflow.keras.layers import Embedding, Bidirectional, Dense, LSTM
 
-df = pd.read_csv('Tweets.csv', header=0)
-df.drop(['selected_text', 'textID'], axis=1, inplace=True)
-print(df.head())
+df = pd.read_csv('./Data/Tweets.csv', header=0)
+data, labels_encoded, num_samples = prepare_data(df)
 
-#simple data preparation code taken from 
-# https://www.kaggle.com/code/yasserh/predicting-twitter-sentiments-top-ml-models
-# and
-# https://scorrea92.medium.com/nlp-twitter-sentiment-analysis-with-tensorflow-15e1b2594cfa
-
-num_samples = df.shape[0]
-print('\nThe dataset contains ' + str(num_samples) + ' samples')
-df.dropna(inplace=True)
-
-# get rid of "neutral" values since we want to do binary classification
-df1 = df[df['sentiment'] != 'neutral']
-
-# separate text and labels
-full_text = df1['text']
-labels = df1['sentiment']
-
-labels_encoded = []
-
-class_names = ['negative', 'positive']
-
-for label in labels:
-    labels_encoded.append(1 if (label == 'positive') else 0)
-
-# create the tokenizer
-tk = Tokenizer(lower=True, filters='')
-
-# find the frequency of each word (TF)
-tk.fit_on_texts(full_text)
-
-
-# Twitter already has a character limit. In the worst case each token is a single character.
-max_line_len = 120
-
-# convert the tweets to sequences of TF counts
-train_tokenized = tk.texts_to_sequences(full_text)
-
-# pad the sequences to the character limit
-data = pad_sequences(train_tokenized, maxlen=max_line_len)
-
-# separate into training and testing data. Split is 80/20
-num_train_samples = int(num_samples*0.8)
-train_samples = data[:num_train_samples]
-train_labels = labels_encoded[:num_train_samples]
-
-test_samples = data[num_train_samples:]
-test_labels = labels_encoded[num_train_samples:]
+train_samples, train_labels = get_training_data(data, labels_encoded, num_samples, 0.8)
 
 max_vocab = 50000
 embedding_columns = 64
@@ -73,9 +26,8 @@ model = tf.keras.Sequential([
         output_dim = embedding_columns,
         # Use masking to handle the variable sequence lengths
         mask_zero=True),
-    tf.keras.layers.LSTM(16),
+    tf.keras.layers.LSTM(32),
     tf.keras.layers.Dense(1),
-    tf.keras.layers.Softmax()
 ])
 
 model.summary()
@@ -113,8 +65,6 @@ ax2.set_xlabel('Epochs')
 ax2.set_ylabel('Accuracy')
 ax2.legend()
 
-plt.savefig("test")
+plt.savefig("test_loss_accuracy")
 
-loss, accuracy = model.evaluate(test_samples, test_labels)
-print("Loss: ", loss)
-print("Accuracy: ", accuracy)
+model.save('./Models/mod')
